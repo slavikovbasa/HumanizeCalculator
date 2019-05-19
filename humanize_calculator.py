@@ -99,26 +99,28 @@ def tokenize(expression: str) -> List[str]:
     return elements
 
 def humanize_number(number: int) -> str:
+    '''Return humanized number representation'''
     if str(number) in human_numerics:
         return human_numerics[str(number)]
     else:
         known_numbers: List[int] = sorted(
             [int(key) for key in human_numerics.keys()],
             reverse=True
-        )
+        )[:-1]
         number_parts: List[str] = []
         for known in known_numbers:
             if number == 0:
                 break
-            elif number > known:
+            elif number >= known:
                 if known in number_orders:
-                    number_parts.append(str(number // known))
+                    number_parts.append(humanize_number(number // known))
 
                 number_parts.append(human_numerics[str(known)])
                 number = number % known
         return ' '.join(number_parts)
 
 def humanize_token(token: str) -> str:
+    '''Return humanized token'''
     if token in human_operators:
         return human_operators[token]
     elif token.isdecimal():
@@ -127,6 +129,19 @@ def humanize_token(token: str) -> str:
         raise InvalidCharError('Invalid token {}'.format(token))
 
 def humanize(expression: str) -> str:
+    '''Humanize expression
+    
+    Expression is considered valid if it contains only integer numbers and
+    operators [+-*/=], all of this operators have to be binary;
+    numbers, except for '0' itself cannot start with '0';
+    multiple zeroes (e.g. '000') are also forbidden;
+    spaces are allowed, except for when they are between numbers (e.g. '2 2=2')
+    '''
     if not is_valid(expression):
-        return 'invalid expression'
+        return 'invalid input'
     expression = expression.replace(' ', '')
+    try:
+        tokens: List[str] = tokenize(expression)
+        return ' '.join(humanize_token(token) for token in tokens)
+    except InvalidCharError:
+        return 'invalid input'
