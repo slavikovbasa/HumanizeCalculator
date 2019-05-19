@@ -5,6 +5,8 @@ class InvalidCharError(ValueError): pass
 
 operators: str = '+-*/='
 
+number_orders: int = [100, 1000, 1000000, 1000000000]
+
 human_numerics: Dict[str, str] = {
     '0': 'zero',
     '1': 'one',
@@ -49,13 +51,15 @@ human_operators: Dict[str, str] = {
 }
 
 expression_pattern = re.compile(
-    r'''^(0|[1-9]\d*)       # the first token is always number;
+    r'''^\s*(0|[1-9]\d*)    # the first token is always number;
                             # number is either single '0' character
                             # or any other numeric string,
                             # that doesn't start with 0
-        (               
+        (   \s*            
             [\+\-\*\/\=]    # any operator
+            \s*
             (0|[1-9]\d*)    # any number
+            \s*
         )*$                 # pattern <operator><number> is repeated
                             # arbitrary amount of times
     ''', re.VERBOSE
@@ -94,3 +98,35 @@ def tokenize(expression: str) -> List[str]:
         elements.append(token)
     return elements
 
+def humanize_number(number: int) -> str:
+    if str(number) in human_numerics:
+        return human_numerics[str(number)]
+    else:
+        known_numbers: List[int] = sorted(
+            [int(key) for key in human_numerics.keys()],
+            reverse=True
+        )
+        number_parts: List[str] = []
+        for known in known_numbers:
+            if number == 0:
+                break
+            elif number > known:
+                if known in number_orders:
+                    number_parts.append(str(number // known))
+
+                number_parts.append(human_numerics[str(known)])
+                number = number % known
+        return ' '.join(number_parts)
+
+def humanize_token(token: str) -> str:
+    if token in human_operators:
+        return human_operators[token]
+    elif token.isdecimal():
+        return humanize_number(int(token))
+    else:
+        raise InvalidCharError('Invalid token {}'.format(token))
+
+def humanize(expression: str) -> str:
+    if not is_valid(expression):
+        return 'invalid expression'
+    expression = expression.replace(' ', '')
