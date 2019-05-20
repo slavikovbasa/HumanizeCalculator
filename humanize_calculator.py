@@ -1,5 +1,6 @@
-from typing import List, Tuple, Dict
 import re
+import sys
+from typing import List, Tuple, Dict
 
 class InvalidCharError(ValueError): pass
 
@@ -145,3 +146,13 @@ def humanize(expression: str) -> str:
         return ' '.join(humanize_token(token) for token in tokens)
     except InvalidCharError:
         return 'invalid input'
+
+def main():
+    if len(sys.argv) != 2:
+        print('Usage: humanize_calculator.py <expression_to_humanize>')
+        exit()
+    
+    print(humanize(sys.argv[1]))
+
+if __name__ == '__main__':
+    main()
