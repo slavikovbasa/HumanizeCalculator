@@ -68,7 +68,7 @@ expression_pattern = re.compile(
 
 def is_valid(expression: str) -> bool:
     '''Test if expression is valid'''
-    return expression_pattern.match(expression) != None
+    return bool(expression_pattern.match(expression))
 
 def extract_token(expression: str) -> Tuple[str, str]:
     '''Extract token from the beginning of the expression
@@ -85,7 +85,7 @@ def extract_token(expression: str) -> Tuple[str, str]:
     elif expression[0] in operators:
         return (expression[0], expression[1:])
     else:
-        raise InvalidCharError('Invalid char {}'.format(expression[0]))
+        raise InvalidCharError(f'Invalid char {expression[0]}')
 
 def tokenize(expression: str) -> List[str]:
     '''Tokenize expression
@@ -105,19 +105,18 @@ def humanize_number(number: int) -> str:
         return human_numerics[str(number)]
     else:
         known_numbers: List[int] = sorted(
-            [int(key) for key in human_numerics.keys()],
-            reverse=True
+            int(key) for key in human_numerics.keys()
         )[:-1]
         number_parts: List[str] = []
-        for known in known_numbers:
-            if number == 0:
-                break
-            elif number >= known:
+        while number > 0:
+            known = known_numbers.pop()
+            if number >= known:
                 if known in number_orders:
                     number_parts.append(humanize_number(number // known))
 
                 number_parts.append(human_numerics[str(known)])
                 number = number % known
+
         return ' '.join(number_parts)
 
 def humanize_token(token: str) -> str:
@@ -127,7 +126,7 @@ def humanize_token(token: str) -> str:
     elif token.isdecimal():
         return humanize_number(int(token))
     else:
-        raise InvalidCharError('Invalid token {}'.format(token))
+        raise InvalidCharError(f'Invalid token {token}')
 
 def humanize(expression: str) -> str:
     '''Humanize expression
